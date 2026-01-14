@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>ElectroLearn</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .chat-box {
+      width: 100%;
+      max-width: 420px;
+      background: #020617;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    textarea {
+      resize: none;
+      height: 120px;
+      border-radius: 8px;
+      border: none;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .mic {
+      background: #1d4ed8;
+      color: white;
+    }
+
+    .send {
+      background: #16a34a;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="chat-box">
+    <div class="logo">⚡ ElectroLearn</div>
+
+    <textarea id="text" placeholder="Escreva ou fale sua dúvida elétrica..."></textarea>
+
+    <div class="buttons">
+      <button class="mic" onclick="startVoice()">🎤 Falar</button>
+      <button class="send" onclick="sendText()">Enviar</button>
+    </div>
+  </div>
+
+  <script>
+    function startVoice() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "pt-BR";
+
+      recognition.onresult = function(event) {
+        document.getElementById("text").value = event.results[0][0].transcript;
+      };
+
+      recognition.start();
+    }
+
+    function sendText() {
+      alert("Texto enviado:\n\n" + document.getElementById("text").value);
+    }
+  </script>
+
+</body>
+</html>
