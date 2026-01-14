@@ -1,69 +1,51 @@
 import express from "express";
-import fs from "fs";
-import fetch from "node-fetch"; // se não estiver instalado, adicionar no package.json
 import cors from "cors";
+import bodyParser from "body-parser";
+import fs from "fs";
+import OpenAI from "openai";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
-// Rota principal do chat
-app.post("/chat", async (req, res) => {
-  const input = req.body.question;
-  if (!input) return res.status(400).json({ error: "Pergunta vazia" });
+// Inicializar OpenAI com a chave da variável de ambiente
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-  try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [
-          { role: "system", content: "Você é especialista em elétrica e ajuda com diagnósticos e consertos." },
-          { role: "user", content: input }
-        ],
-        max_tokens: 500
-      })
-    });
+// Caminho para salvar histórico
+const HISTORICO_FILE = "./historico.json";
 
-    const data = await response.json();
-    const answer = data.choices[0].message.content;
-
-    saveInteraction(input, answer);
-
-    res.json({ answer });
-
-  } catch (error) {
-    console.error("Erro GPT:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Função para salvar histórico
-function saveInteraction(pergunta, resposta) {
-  const path = "./interactions.json";
-  let data = [];
-
-  if (fs.existsSync(path)) {
-    data = JSON.parse(fs.readFileSync(path));
-  }
-
-  data.push({
-    pergunta,
-    resposta,
-    data: new Date().toISOString()
-  });
-
-  fs.writeFileSync(path, JSON.stringify(data, null, 2));
+// Cria arquivo de histórico se não existir
+if (!fs.existsSync(HISTORICO_FILE)) {
+  fs.writeFileSync(HISTORICO_FILE, JSON.stringify([]));
 }
 
-// Inicializar backend
-app.listen(PORT, () => {
-  console.log(`Backend rodando na porta ${PORT}`);
+// Rota principal de chat
+app.post("/chat", async (req, res) => {
+  const question = req.body.question;
+  if (!question) return res.json({ answer: "Pergunta vazia!" });
+
+  try {
+    // Chamada ao OpenAI GPT
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: question }],
+    });
+
+    const answer = completion.choices[0].message.content;
+
+    // Salvar pergunta e resposta no histórico
+    const historico = JSON.parse(fs.readFileSync(HISTORICO_FILE));
+    historico.push({ question, answer, timestamp: new Date().toISOString() });
+    fs.writeFileSync(HISTORICO_FILE, JSON.stringify(historico, null, 2));
+
+    // Retornar resposta ao frontend
+    res.json({ answer });
+  } catch (error) {
+    console.error("Erro GPT:", error);
+    res.json({ answer: "Erro na IA: " + error.message });
+  }
 });
 
+// Inicializar servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Backend rodando na porta ${PORT}`));
