@@ -1,0 +1,16 @@
+# Exported from Render on 2026-01-14T20:42:00Z
+version: "1"
+projects:
+- name: My project
+  environments:
+  - name: Production
+    services:
+    - type: web
+      name: electrolearn-backend
+      runtime: docker
+      repo: https://github.com/Rajudi59/electrolearn-backend
+      plan: free
+      region: virginia
+      dockerContext: .
+      dockerfilePath: ./Dockerfile
+      autoDeployTrigger: commit
