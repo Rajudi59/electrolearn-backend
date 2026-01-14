@@ -66,3 +66,4 @@ function saveInteraction(pergunta, resposta) {
 app.listen(PORT, () => {
   console.log(`Backend rodando na porta ${PORT}`);
 });
+
