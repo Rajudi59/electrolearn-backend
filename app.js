@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 
 // Coloque sua chave da OpenAI aqui
 const openai = new OpenAI({
-  apiKey: "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
+  apiKey: "chave
 " 
 });
 
@@ -49,5 +49,6 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`Back-end rodando em http://localhost:${port}`);
 });
+
 
 
