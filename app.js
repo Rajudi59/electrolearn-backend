@@ -49,3 +49,4 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`Back-end rodando em http://localhost:${port}`);
 });
+
