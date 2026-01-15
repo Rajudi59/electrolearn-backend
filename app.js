@@ -1,52 +1,51 @@
-import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import fs from "fs";
-import OpenAI from "openai";
+// app.js - ElectroLearn Teste OpenAI GPT
+
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const { OpenAI } = require("openai");
 
 const app = express();
+const port = process.env.PORT || 3000;
+
+// Coloque sua chave da OpenAI aqui
+const openai = new OpenAI({
+  apiKey: "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
+" 
+});
+
 app.use(cors());
 app.use(bodyParser.json());
 
-// Inicializar OpenAI com a chave da variável de ambiente
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// Caminho para salvar histórico
-const HISTORICO_FILE = "./historico.json";
-
-// Cria arquivo de histórico se não existir
-if (!fs.existsSync(HISTORICO_FILE)) {
-  fs.writeFileSync(HISTORICO_FILE, JSON.stringify([]));
-}
-
-// Rota principal de chat
+// Rota para receber pergunta do front-end
 app.post("/chat", async (req, res) => {
-  const question = req.body.question;
-  if (!question) return res.json({ answer: "Pergunta vazia!" });
+  const { question } = req.body;
+
+  if (!question) return res.status(400).json({ answer: "Pergunta vazia!" });
 
   try {
-    // Chamada ao OpenAI GPT
-    const completion = await openai.chat.completions.create({
+    const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: question }],
+      messages: [
+        { role: "system", content: "Você é um assistente técnico de elétrica." },
+        { role: "user", content: question }
+      ],
+      max_tokens: 500
     });
 
-    const answer = completion.choices[0].message.content;
-
-    // Salvar pergunta e resposta no histórico
-    const historico = JSON.parse(fs.readFileSync(HISTORICO_FILE));
-    historico.push({ question, answer, timestamp: new Date().toISOString() });
-    fs.writeFileSync(HISTORICO_FILE, JSON.stringify(historico, null, 2));
-
-    // Retornar resposta ao frontend
+    const answer = response.choices[0].message.content;
     res.json({ answer });
   } catch (error) {
-    console.error("Erro GPT:", error);
-    res.json({ answer: "Erro na IA: " + error.message });
+    console.error("Erro OpenAI:", error);
+    res.status(500).json({ answer: "Erro ao consultar a IA." });
   }
 });
 
-// Inicializar servidor
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Backend rodando na porta ${PORT}`));
+// Rota de teste
+app.get("/", (req, res) => {
+  res.send("Back-end ElectroLearn rodando!");
+});
 
+app.listen(port, () => {
+  console.log(`Back-end rodando em http://localhost:${port}`);
+});
